@@ -410,6 +410,8 @@ def market_summary_for_symbol(symbol):
 
 
 def send_morning_summary():
+    if not SEND_MORNING_SUMMARY:
+        return
     global last_summary_date
 
     now = datetime.now(timezone.utc)
@@ -448,7 +450,7 @@ def check_symbol(symbol):
         return
 
     breakout = detect_breakout_setup(df_15m, symbol, trend)
-    if breakout:
+    if breakout and SEND_BREAKOUT_ALERTS:
         breakout_key = f"{symbol}_{trend}_{breakout['time']}_breakout"
         if breakout_key not in last_breakout_keys:
             send_telegram(breakout_message(breakout))
