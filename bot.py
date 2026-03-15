@@ -7,7 +7,16 @@ from datetime import datetime, timezone
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
 
-SYMBOLS = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
+SYMBOLS = [
+"BTCUSDT",
+"ETHUSDT",
+"SOLUSDT",
+"BNBUSDT",
+"XRPUSDT",
+"LINKUSDT",
+"AVAXUSDT",
+"DOGEUSDT"
+]
 
 CHECK_INTERVAL_SECONDS = 300
 SUMMARY_HOUR_UTC = 7
