@@ -20,6 +20,7 @@ TRAIL_AFTER_R = 1.5
 PARTIAL_TP_AT_R = 2.0
 ENABLE_TRAILING = True
 MIN_AI_SCORE = 6
+MAX_TRADES_PER_SYMBOL_PER_DAY = 2
 
 BINANCE_FUTURES_BASE_URL = "https://demo-fapi.binance.com"
 SYMBOLS = [
@@ -63,6 +64,11 @@ AI_SCORE_NORMAL = 5.0
 last_signal_keys = set()
 last_breakout_keys = set()
 last_summary_date = None
+from collections import defaultdict
+from datetime import datetime
+
+symbol_trade_counter = defaultdict(int)
+symbol_trade_day = defaultdict(lambda: None)
 
 
 def send_telegram(text: str) -> None:
@@ -205,7 +211,20 @@ def place_exit_orders(symbol: str, side: str, quantity: float, stop_price: float
     })
 
     return stop_order, take_order
+    
+def can_open_trade(symbol: str) -> bool:
+    today = datetime.utcnow().date()
 
+    if symbol_trade_day[symbol] != today:
+        symbol_trade_day[symbol] = today
+        symbol_trade_counter[symbol] = 0
+
+    if symbol_trade_counter[symbol] >= MAX_TRADES_PER_SYMBOL_PER_DAY:
+        print(symbol, "- daily trade limit reached")
+        return False
+
+    return True
+    
 def calc_r_multiple(entry: float, stop: float, current_price: float, trend: str) -> float:
     risk = abs(entry - stop)
     if risk <= 0:
@@ -221,6 +240,9 @@ def calc_r_multiple(entry: float, stop: float, current_price: float, trend: str)
     
 def execute_auto_trade(symbol: str, trend: str, trade: dict, strength: str):
     if not AUTO_TRADE:
+        return
+
+    if not can_open_trade(symbol):
         return
 
     if strength != "INSTITUTIONAL":
@@ -260,6 +282,7 @@ def execute_auto_trade(symbol: str, trend: str, trade: dict, strength: str):
         return
 
     stop_order, take_order = place_exit_orders(symbol, side, qty, stop, take)
+    symbol_trade_counter[symbol] += 1
 
     send_telegram(
         f"🤖 DEMO AUTO-TRADE OPENED\n\n"
