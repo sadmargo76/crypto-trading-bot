@@ -79,7 +79,7 @@ def get_funding_rate(symbol: str) -> float:
     return float(data["lastFundingRate"])
 
 
-def get_long_short_ratio(symbol: str, period: str = "5m") -> float | None:
+def get_long_short_ratio(symbol: str, period: str = "5m"):
     try:
         url = "https://fapi.binance.com/futures/data/globalLongShortAccountRatio"
         params = {"symbol": symbol, "period": period, "limit": 1}
@@ -182,8 +182,7 @@ def check_confirmation(df_5m, trend):
         flow_ok = False
 
     confirm_ok = direction_ok and volume_ok and candle_quality_ok and flow_ok
-
-    return confirm_ok, volume_ok, candle_quality_ok, taker_ratio
+    return confirm_ok, taker_ratio
 
 
 def check_impulse_filter(df_5m):
@@ -241,7 +240,6 @@ def detect_breakout_setup(df_15m, symbol, trend):
         return None
 
     compressed = range_size <= last["atr14"] * BREAKOUT_ATR_MULTIPLIER * 3
-
     if not compressed:
         return None
 
@@ -280,9 +278,8 @@ def breakout_message(setup):
     )
 
 
-def signal_strength(df_1h, df_15m, df_5m, trend, funding, oi, long_short_ratio, taker_ratio):
+def signal_strength(df_1h, df_15m, df_5m, trend, funding, long_short_ratio, taker_ratio):
     score = 0
-
     last1h = df_1h.iloc[-1]
     last15 = df_15m.iloc[-1]
     last5 = df_5m.iloc[-1]
@@ -325,10 +322,8 @@ def signal_strength(df_1h, df_15m, df_5m, trend, funding, oi, long_short_ratio, 
 def should_send_strength(strength):
     if SEND_ONLY_STRONG:
         return strength == "Сильный"
-
     if SEND_NORMAL_AND_STRONG:
         return strength in ["Нормальный", "Сильный"]
-
     return True
 
 
@@ -344,7 +339,7 @@ def format_signal_message(symbol, trend, trade, strength, funding, oi, long_shor
         f"Стоп: {trade['stop']:.2f}\n"
         f"Тейк: {trade['take']:.2f}\n"
         f"R:R = {trade['rr']:.2f}\n\n"
-        f"Фонды / поток:\n"
+        f"Фильтры:\n"
         f"- Funding: {funding:.5f}\n"
         f"- Open Interest: {oi:.2f}\n"
         f"- Long/Short ratio: {ratio_text}\n"
@@ -355,19 +350,6 @@ def format_signal_message(symbol, trend, trade, strength, funding, oi, long_shor
         f"- 5m подтверждение входа\n"
         f"- объём / ATR / поток проверены\n\n"
         f"Время UTC: {trade['time']}"
-    )
-
-
-def flat_message(symbol, df_1h):
-    last = df_1h.iloc[-1]
-    return (
-        f"⛔ FLAT MARKET\n\n"
-        f"{symbol}\n"
-        f"Рынок во флэте.\n"
-        f"EMA50 и EMA200 слишком близко.\n"
-        f"Лучше не лезть.\n\n"
-        f"Цена: {last['close']:.2f}\n"
-        f"Время UTC: {last['open_time']}"
     )
 
 
@@ -406,7 +388,6 @@ def send_morning_summary():
 
     if last_summary_date == current_date:
         return
-
     if now.hour < SUMMARY_HOUR_UTC:
         return
 
@@ -417,8 +398,7 @@ def send_morning_summary():
         except Exception as e:
             parts.append(f"{symbol}\n- Ошибка обзора: {e}\n")
 
-    message = "\n".join(parts)
-    send_telegram(message)
+    send_telegram("\n".join(parts))
     last_summary_date = current_date
     print("Morning summary sent")
 
@@ -444,13 +424,13 @@ def check_symbol(symbol):
         if breakout_key not in last_breakout_keys:
             send_telegram(breakout_message(breakout))
             last_breakout_keys.add(breakout_key)
-            print(symbol, "- breakout heads-up sent")
+            print(symbol, "- breakout sent")
 
     if not check_pullback(df_15m, trend):
-        print(symbol, "- trend exists but no quality pullback")
+        print(symbol, "- no quality pullback")
         return
 
-    confirm_ok, volume_ok, candle_quality_ok, taker_ratio = check_confirmation(df_5m, trend)
+    confirm_ok, taker_ratio = check_confirmation(df_5m, trend)
     if not confirm_ok:
         print(symbol, "- no valid confirmation")
         return
@@ -461,17 +441,14 @@ def check_symbol(symbol):
 
     trade = build_trade(df_5m, trend)
     if trade is None:
-        print(symbol, "- failed stop/take/RR")
+        print(symbol, "- failed RR")
         return
 
     funding = get_funding_rate(symbol)
     oi = get_open_interest(symbol)
     long_short_ratio = get_long_short_ratio(symbol)
 
-    strength = signal_strength(
-        df_1h, df_15m, df_5m, trend, funding, oi, long_short_ratio, taker_ratio
-    )
-
+    strength = signal_strength(df_1h, df_15m, df_5m, trend, funding, long_short_ratio, taker_ratio)
     if not should_send_strength(strength):
         print(symbol, f"- strength {strength}, skipped")
         return
@@ -481,10 +458,7 @@ def check_symbol(symbol):
         print(symbol, "- duplicate skipped")
         return
 
-    message = format_signal_message(
-        symbol, trend, trade, strength, funding, oi, long_short_ratio, taker_ratio
-    )
-
+    message = format_signal_message(symbol, trend, trade, strength, funding, oi, long_short_ratio, taker_ratio)
     send_telegram(message)
     last_signal_keys.add(key)
     print(symbol, "- signal sent")
@@ -495,7 +469,7 @@ def startup_message():
         "🚀 Бот запущен 24/7\n"
         "Монеты: BTCUSDT, ETHUSDT, SOLUSDT\n"
         "Режим: intraday futures\n"
-        "Фильтры: trend / pullback / ATR / volume / funding / OI / L-S ratio / breakout"
+        "Фильтры: trend / pullback / ATR / funding / OI / long-short / breakout"
     )
 
 
@@ -506,13 +480,11 @@ def run_bot():
     while True:
         try:
             send_morning_summary()
-
             for symbol in SYMBOLS:
                 try:
                     check_symbol(symbol)
                 except Exception as e:
                     print(symbol, "error:", e)
-
         except Exception as e:
             print("Main loop error:", e)
 
