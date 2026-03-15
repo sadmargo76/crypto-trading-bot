@@ -879,10 +879,10 @@ message += (
         f"\nFunding: {funding_label}"
     )
 
-    send_telegram(message)
-    execute_auto_trade(symbol, trend, trade, strength)
-    last_signal_keys.add(key)
-    print(symbol, "- signal sent")
+send_telegram(message)
+execute_auto_trade(symbol, trend, trade, strength)
+last_signal_keys.add(key)
+print(symbol, "- signal sent")
 
 
 def startup_message():
