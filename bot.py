@@ -201,7 +201,19 @@ def place_exit_orders(symbol: str, side: str, quantity: float, stop_price: float
 
     return stop_order, take_order
 
+def calc_r_multiple(entry: float, stop: float, current_price: float, trend: str) -> float:
+    risk = abs(entry - stop)
+    if risk <= 0:
+        return 0.0
 
+    if trend == "LONG":
+        return (current_price - entry) / risk
+
+    if trend == "SHORT":
+        return (entry - current_price) / risk
+
+    return 0.0
+    
 def execute_auto_trade(symbol: str, trend: str, trade: dict, strength: str):
     if not AUTO_TRADE:
         return
