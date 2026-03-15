@@ -337,35 +337,7 @@ def signal_strength(df_1h, df_15m, df_5m, trend, funding, long_short_ratio, take
 
 
 def should_send_strength(strength):
-def signal_probability(strength, oi_pct, taker_ratio, long_short_ratio, trend):
 
-    prob = 50
-
-    if strength == "Нормальный":
-        prob = 60
-    elif strength == "Сильный":
-        prob = 72
-    elif strength == "INSTITUTIONAL":
-        prob = 82
-
-    if abs(oi_pct) > 1.5:
-        prob += 4
-
-    if trend == "LONG" and taker_ratio >= 0.55:
-        prob += 4
-    elif trend == "SHORT" and taker_ratio <= 0.45:
-        prob += 4
-
-    if long_short_ratio is not None:
-        if trend == "LONG" and long_short_ratio < 1.8:
-            prob += 3
-        elif trend == "SHORT" and long_short_ratio > 0.6:
-            prob += 3
-
-    if prob > 95:
-        prob = 95
-
-    return prob
     if SEND_ONLY_INSTITUTIONAL:
         return strength == "INSTITUTIONAL"
 
@@ -397,12 +369,9 @@ def format_signal_message(symbol, trend, trade, strength, funding, oi, long_shor
         elif trend == "SHORT" and long_short_ratio > 0.5:
             reasons.append("толпа не перегрета в шорт")
 
-    probability = signal_probability(strength, oi_pct, taker_ratio, long_short_ratio, trend)
-    reasons_text = ", ".join(reasons) if reasons else "тренд + откат + подтверждение"
-
-    return (
+return (
         f"{symbol} {trend}\n\n"
-        f"Сила: {strength}\n"
+        f"Сила: {strength}\strengt
         f"Вероятность: {probability}%\n"
         f"Вход: {trade['entry']:.2f}\n"
         f"Стоп: {trade['stop']:.2f}\n"
