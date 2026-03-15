@@ -370,16 +370,16 @@ def format_signal_message(symbol, trend, trade, strength, funding, oi, long_shor
             reasons.append("толпа не перегрета в шорт")
 
 return (
-        f"{symbol} {trend}\n\n"
-        f"Сила: {strength}\strengt
-        f"Вероятность: {probability}%\n"
-        f"Вход: {trade['entry']:.2f}\n"
-        f"Стоп: {trade['stop']:.2f}\n"
-        f"Тейк: {trade['take']:.2f}\n"
-        f"R:R = {trade['rr']:.2f}\n\n"
-        f"Почему сигнал:\n"
-        f"{reasons_text}"
-        )
+    f"{symbol} {trend}\n\n"
+    f"Сила: {strength}\n"
+    f"Вероятность: {probability}%\n"
+    f"Вход: {trade['entry']:.2f}\n"
+    f"Стоп: {trade['stop']:.2f}\n"
+    f"Тейк: {trade['take']:.2f}\n"
+    f"R:R = {trade['rr']:.2f}\n\n"
+    f"Почему сигнал:\n"
+    f"{reasons_text}"
+)
 
 def market_summary_for_symbol(symbol):
     df_1h = add_indicators(get_futures_klines(symbol, "1h", 300))
