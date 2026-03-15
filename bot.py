@@ -52,15 +52,27 @@ last_summary_date = None
 
 
 def send_telegram(text: str) -> None:
+    if not BOT_TOKEN or not CHAT_ID:
+        print("BOT_TOKEN or CHAT_ID is missing")
+        return
+
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+    params = {"chat_id": CHAT_ID, "text": text}
+    try:
+        requests.get(url, params=params, timeout=REQUEST_TIMEOUT)
+    except Exception as e:
+        print("Telegram error:", e)
+
+
 def sign_params(params: dict) -> str:
-    query = "&".join([f"{k}={params[k]}" 
-for k in params])
+    query = "&".join([f"{k}={params[k]}" for k in params])
     signature = hmac.new(
-BINANCE_SECRET_KEY.encode("utf-8"),
+        BINANCE_SECRET_KEY.encode("utf-8"),
         query.encode("utf-8"),
         hashlib.sha256
     ).hexdigest()
     return signature
+
 
 
 def signed_request(method: str, path: str, params: dict):
@@ -79,7 +91,7 @@ def signed_request(method: str, path: str, params: dict):
         if method == "GET":
             r = requests.get(url, params=params, headers=headers, timeout=20)
         else:
-            r = requests.post(url, params=params, headers=headers, timeout=20)
+            r = requests.post(url, params=params, headrs=headers, timeout=20)
 
         r.raise_for_status()
         return r.json()
