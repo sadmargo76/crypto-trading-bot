@@ -1,12 +1,22 @@
 import os
 import time
+import hmac
+import hashlib
 import requests
 import pandas as pd
 from datetime import datetime, timezone
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
+BINANCE_API_KEY = os.getenv("BINANCE_API_KEY")
+BINANCE_SECRET_KEY = os.getenv("BINANCE_SECRET_KEY")
 
+AUTO_TRADE = True
+RISK_PER_TRADE = 0.005
+MAX_OPEN_POSITIONS = 3
+LEVERAGE = 5
+
+BINANCE_FUTURES_BASE_URL = "https://demo-fapi.binance.com"
 SYMBOLS = [
 "BTCUSDT",
 "ETHUSDT",
@@ -42,6 +52,189 @@ last_summary_date = None
 
 
 def send_telegram(text: str) -> None:
+def sign_params(params: dict) -> str:
+    query = "&".join([f"{k}={params[k]}" for k in params])
+    signature = hmac.new(
+        BINANCE_SECRET_KEY.encode("utf-8"),
+        query.encode("utf-8"),
+        hashlib.sha256
+    ).hexdigest()
+    return signature
+
+
+def signed_request(method: str, path: str, params: dict):
+    if not BINANCE_API_KEY or not BINANCE_SECRET_KEY:
+        print("Binance API keys are missing")
+        return None
+
+    params = params.copy()
+    params["timestamp"] = int(time.time() * 1000)
+    params["signature"] = sign_params(params)
+
+    headers = {"X-MBX-APIKEY": BINANCE_API_KEY}
+    url = f"{BINANCE_FUTURES_BASE_URL}{path}"
+
+    try:
+        if method == "GET":
+            r = requests.get(url, params=params, headers=headers, timeout=20)
+        else:
+            r = requests.post(url, params=params, headers=headers, timeout=20)
+
+        r.raise_for_status()
+        return r.json()
+    except Exception as e:
+        print("Signed request error:", e)
+        return None
+
+
+def get_open_positions():
+    data = signed_request("GET", "/fapi/v2/positionRisk", {})
+    if not data:
+        return []
+
+    positions = []
+    for p in data:
+        try:
+            amt = float(p["positionAmt"])
+            if amt != 0:
+                positions.append(p)
+        except Exception:
+            pass
+    return positions
+
+
+def has_open_position(symbol: str) -> bool:
+    positions = get_open_positions()
+    for p in positions:
+        if p.get("symbol") == symbol:
+            try:
+                if float(p["positionAmt"]) != 0:
+                    return True
+            except Exception:
+                pass
+    return False
+
+
+def set_leverage(symbol: str, leverage: int):
+    return signed_request("POST", "/fapi/v1/leverage", {
+        "symbol": symbol,
+        "leverage": leverage
+    })
+
+
+def get_account_balance():
+    data = signed_request("GET", "/fapi/v2/balance", {})
+    if not data:
+        return None
+
+    for item in data:
+        if item.get("asset") == "USDT":
+            try:
+                return float(item["balance"])
+            except Exception:
+                return None
+    return None
+
+
+def calculate_quantity(entry: float, stop: float, balance: float) -> float:
+    risk_amount = balance * RISK_PER_TRADE
+    stop_distance = abs(entry - stop)
+
+    if stop_distance <= 0:
+        return 0.0
+
+    qty = (risk_amount / stop_distance) * LEVERAGE
+    return round(qty, 3)
+
+
+def place_market_order(symbol: str, side: str, quantity: float):
+    return signed_request("POST", "/fapi/v1/order", {
+        "symbol": symbol,
+        "side": side,
+        "type": "MARKET",
+        "quantity": quantity
+    })
+
+
+def place_exit_orders(symbol: str, side: str, quantity: float, stop_price: float, take_price: float):
+    exit_side = "SELL" if side == "BUY" else "BUY"
+
+    stop_order = signed_request("POST", "/fapi/v1/order", {
+        "symbol": symbol,
+        "side": exit_side,
+        "type": "STOP_MARKET",
+        "stopPrice": round(stop_price, 4),
+        "closePosition": "true",
+        "workingType": "MARK_PRICE"
+    })
+
+    take_order = signed_request("POST", "/fapi/v1/order", {
+        "symbol": symbol,
+        "side": exit_side,
+        "type": "TAKE_PROFIT_MARKET",
+        "stopPrice": round(take_price, 4),
+        "closePosition": "true",
+        "workingType": "MARK_PRICE"
+    })
+
+    return stop_order, take_order
+
+
+def execute_auto_trade(symbol: str, trend: str, trade: dict, strength: str):
+    if not AUTO_TRADE:
+        return
+
+    if strength != "INSTITUTIONAL":
+        print(symbol, "- autotrade skipped, not institutional")
+        return
+
+    positions = get_open_positions()
+    if len(positions) >= MAX_OPEN_POSITIONS:
+        print(symbol, "- autotrade skipped, max positions reached")
+        return
+
+    if has_open_position(symbol):
+        print(symbol, "- autotrade skipped, position already exists")
+        return
+
+    balance = get_account_balance()
+    if balance is None:
+        print(symbol, "- autotrade skipped, no balance")
+        return
+
+    entry = trade["entry"]
+    stop = trade["stop"]
+    take = trade["take"]
+
+    qty = calculate_quantity(entry, stop, balance)
+    if qty <= 0:
+        print(symbol, "- autotrade skipped, invalid quantity")
+        return
+
+    set_leverage(symbol, LEVERAGE)
+
+    side = "BUY" if trend == "LONG" else "SELL"
+    order = place_market_order(symbol, side, qty)
+
+    if not order:
+        print(symbol, "- market order failed")
+        return
+
+    stop_order, take_order = place_exit_orders(symbol, side, qty, stop, take)
+
+    send_telegram(
+        f"🤖 DEMO AUTO-TRADE OPENED\n\n"
+        f"{symbol} {trend}\n"
+        f"Сила: {strength}\n"
+        f"Объём: {qty}\n"
+        f"Вход: {entry:.2f}\n"
+        f"Стоп: {stop:.2f}\n"
+        f"Тейк: {take:.2f}\n"
+        f"Плечо: {LEVERAGE}x\n"
+        f"Риск: {RISK_PER_TRADE * 100:.1f}%"
+    )
+
+    print(symbol, "- demo auto-trade opened")
     if not BOT_TOKEN or not CHAT_ID:
         print("BOT_TOKEN or CHAT_ID is missing")
         return
@@ -499,6 +692,7 @@ def check_symbol(symbol):
 
     message = format_signal_message(symbol, trend, trade, strength, funding, oi, long_short_ratio, taker_ratio)
     send_telegram(message)
+    execute_auto_trade(symbol, trend, trade, strength)
     last_signal_keys.add(key)
     print(symbol, "- signal sent")
 
