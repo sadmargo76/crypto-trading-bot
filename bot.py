@@ -337,7 +337,8 @@ def signal_strength(df_1h, df_15m, df_5m, trend, funding, long_short_ratio, take
 
 
 def should_send_strength(strength):
-    def signal_probability(strength, oi_pct, taker_ratio, long_short_ratio, trend):
+def signal_probability(strength, oi_pct, taker_ratio, long_short_ratio, trend):
+
     prob = 50
 
     if strength == "Нормальный":
