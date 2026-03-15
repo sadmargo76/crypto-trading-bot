@@ -840,28 +840,7 @@ def check_symbol(symbol):
         print(symbol, "- duplicate skipped")
         return
 
-    trend = trade["trend"]
-    funding_label = funding_bias_label(funding, trend)
-
-of_score, of_label = orderflow_score(
-    trend,
-    taker_ratio,
-    oi_pct,
-    volume_ratio
-)
-
-ai_score, ai_class = ai_setup_score(
-        trend,
-        strength,
-        funding,
-        long_short_ratio,
-        taker_ratio,
-        oi_pct,
-        volume_ratio,
-        trade["rr"]
-    )
-
-message = format_signal_message(
+    message = format_signal_message(
         symbol,
         trend,
         trade,
@@ -873,17 +852,10 @@ message = format_signal_message(
         oi_pct
     )
 
-message += (
-        f"\n\nAI Score: {ai_score}"
-        f"\nКласс сигнала: {ai_class}"
-        f"\nOrderflow: {of_label}"
-        f"\nFunding: {funding_label}"
-    )
-
-send_telegram(message)
-execute_auto_trade(symbol, trend, trade, strength)
-last_signal_keys.add(key)
-print(symbol, "- signal sent")
+    send_telegram(message)
+    execute_auto_trade(symbol, trend, trade, strength)
+    last_signal_keys.add(key)
+    print(symbol, "- signal sent")
 
 
 def startup_message():
