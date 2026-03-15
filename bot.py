@@ -840,6 +840,7 @@ def check_symbol(symbol):
         print(symbol, "- duplicate skipped")
         return
 
+    trend = trade["trend"]
     funding_label = funding_bias_label(funding, trend)
 
 of_score, of_label = orderflow_score(
@@ -849,7 +850,6 @@ of_score, of_label = orderflow_score(
     volume_ratio
 )
 
-trend = trade["trend"]
 ai_score, ai_class = ai_setup_score(
         trend,
         strength,
