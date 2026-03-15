@@ -4,7 +4,7 @@ import requests
 import pandas as pd
 from datetime import datetime, timezone
 
-BOT_TOKEN = os.getenv("8694365620:AAEpimRdaZ0C8aG-jEZgeM8zaLq3ZTwIXSE")
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
 
 SYMBOLS = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
