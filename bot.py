@@ -45,6 +45,15 @@ FLAT_THRESHOLD_PCT = 0.15
 BREAKOUT_LOOKBACK = 20
 BREAKOUT_ATR_MULTIPLIER = 1.2
 REQUEST_TIMEOUT = 20
+FUNDING_POS_EXTREME = 0.03
+FUNDING_NEG_EXTREME = -0.03
+
+ORDERFLOW_TAKER_STRONG_LONG = 0.55
+ORDERFLOW_TAKER_STRONG_SHORT = 0.45
+
+AI_SCORE_INSTITUTIONAL = 8.0
+AI_SCORE_STRONG = 6.5
+AI_SCORE_NORMAL = 5.0
 
 last_signal_keys = set()
 last_breakout_keys = set()
@@ -312,6 +321,126 @@ def get_funding_rate(symbol: str) -> float:
 
 
 def get_long_short_ratio(symbol: str, period: str = "5m"):
+def funding_bias_label(funding: float, trend: str) -> str:
+    if funding >= FUNDING_POS_EXTREME:
+        return "толпа перегрета в LONG"
+    if funding <= FUNDING_NEG_EXTREME:
+        return "толпа перегрета в SHORT"
+
+    if trend == "LONG":
+        return "funding нейтральный / умеренный"
+    if trend == "SHORT":
+        return "funding нейтральный / умеренный"
+
+    return "funding нейтральный"
+
+
+def orderflow_score(trend: str, taker_ratio: float, oi_pct: float, volume_ratio: float) -> tuple[float, str]:
+    score = 0.0
+    label = "нейтральный"
+
+    if trend == "LONG":
+        if taker_ratio >= ORDERFLOW_TAKER_STRONG_LONG:
+            score += 2.0
+        elif taker_ratio >= 0.52:
+            score += 1.0
+
+        if oi_pct > 1.2:
+            score += 2.0
+        elif oi_pct > 0.5:
+            score += 1.0
+
+        if volume_ratio > 1.4:
+            score += 1.5
+        elif volume_ratio > 1.1:
+            score += 0.5
+
+    elif trend == "SHORT":
+        if taker_ratio <= ORDERFLOW_TAKER_STRONG_SHORT:
+            score += 2.0
+        elif taker_ratio <= 0.48:
+            score += 1.0
+
+        if oi_pct < -1.2:
+            score += 2.0
+        elif oi_pct < -0.5:
+            score += 1.0
+
+        if volume_ratio > 1.4:
+            score += 1.5
+        elif volume_ratio > 1.1:
+            score += 0.5
+
+    if score >= 4.5:
+        label = "сильный"
+    elif score >= 2.5:
+        label = "умеренный"
+
+    return score, label
+
+
+def ai_setup_score(
+    trend: str,
+    strength: str,
+    funding: float,
+    long_short_ratio: float | None,
+    taker_ratio: float,
+    oi_pct: float,
+    volume_ratio: float,
+    rr: float
+) -> tuple[float, str]:
+    score = 0.0
+
+    if trend in ["LONG", "SHORT"]:
+        score += 1.0
+
+    if strength == "INSTITUTIONAL":
+        score += 3.0
+    elif strength == "Сильный":
+        score += 2.0
+    elif strength == "Нормальный":
+        score += 1.0
+
+    if rr >= 2.5:
+        score += 1.5
+    elif rr >= 2.0:
+        score += 1.0
+
+    if trend == "LONG":
+        if taker_ratio >= 0.55:
+            score += 1.0
+        if oi_pct > 1.2:
+            score += 1.0
+        if long_short_ratio is not None and long_short_ratio < 1.8:
+            score += 0.5
+        if funding >= FUNDING_POS_EXTREME:
+            score -= 0.5
+
+    elif trend == "SHORT":
+        if taker_ratio <= 0.45:
+            score += 1.0
+        if oi_pct < -1.2:
+            score += 1.0
+        if long_short_ratio is not None and long_short_ratio > 0.6:
+            score += 0.5
+        if funding <= FUNDING_NEG_EXTREME:
+            score -= 0.5
+
+    if volume_ratio > 1.4:
+        score += 1.0
+    elif volume_ratio > 1.1:
+        score += 0.5
+
+    if score >= AI_SCORE_INSTITUTIONAL:
+        label = "INSTITUTIONAL"
+    elif score >= AI_SCORE_STRONG:
+        label = "Сильный"
+    elif score >= AI_SCORE_NORMAL:
+        label = "Нормальный"
+    else:
+        label = "Слабый"
+
+    return round(score, 1), label
     try:
         url = "https://fapi.binance.com/futures/data/globalLongShortAccountRatio"
         params = {"symbol": symbol, "period": period, "limit": 1}
