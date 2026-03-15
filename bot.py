@@ -872,7 +872,7 @@ message = format_signal_message(
         oi_pct
     )
 
-    message += (
+message += (
         f"\n\nAI Score: {ai_score}"
         f"\nКласс сигнала: {ai_class}"
         f"\nOrderflow: {of_label}"
