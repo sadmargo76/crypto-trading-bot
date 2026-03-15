@@ -320,7 +320,26 @@ def get_funding_rate(symbol: str) -> float:
     return float(data["lastFundingRate"])
 
 
-def get_long_short_ratio(symbol: str, period: str = "5m"):
+def get_long_short_ratio(symbol: str, period: str = "5m", limit: int = 30):
+    try:
+        url = "https://fapi.binance.com/futures/data/globalLongShortAccountRatio"
+        params = {
+            "symbol": symbol,
+            "period": period,
+            "limit": limit
+        }
+        r = requests.get(url, params=params, timeout=REQUEST_TIMEOUT)
+        r.raise_for_status()
+        data = r.json()
+
+        if not data:
+            return None
+
+        return float(data[0]["longShortRatio"])
+    except Exception:
+        return None
+
+
 def funding_bias_label(funding: float, trend: str) -> str:
     if funding >= FUNDING_POS_EXTREME:
         return "толпа перегрета в LONG"
@@ -441,17 +460,6 @@ def ai_setup_score(
         label = "Слабый"
 
     return round(score, 1), label
-    try:
-        url = "https://fapi.binance.com/futures/data/globalLongShortAccountRatio"
-        params = {"symbol": symbol, "period": period, "limit": 1}
-        r = requests.get(url, params=params, timeout=REQUEST_TIMEOUT)
-        r.raise_for_status()
-        data = r.json()
-        if not data:
-            return None
-        return float(data[0]["longShortRatio"])
-    except Exception:
-        return None
 
 
 def ema(series, length):
