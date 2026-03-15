@@ -368,8 +368,8 @@ def format_signal_message(symbol, trend, trade, strength, funding, oi, long_shor
             reasons.append("толпа не перегрета в лонг")
         elif trend == "SHORT" and long_short_ratio > 0.5:
             reasons.append("толпа не перегрета в шорт")
-
-return (
+            
+    return (
     f"{symbol} {trend}\n\n"
     f"Сила: {strength}\n"
     f"Вероятность: {probability}%\n"
