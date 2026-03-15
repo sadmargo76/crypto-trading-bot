@@ -849,6 +849,7 @@ of_score, of_label = orderflow_score(
     volume_ratio
 )
 
+trend = trade["trend"]
 ai_score, ai_class = ai_setup_score(
         trend,
         strength,
