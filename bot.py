@@ -721,7 +721,7 @@ def format_signal_message(symbol, trend, trade, strength, funding, oi, long_shor
         taker_ratio,
         oi_pct,
         1.2,
-        trade["rr"]
+        1.5
     )
 
     if oi_pct > 1.2:
