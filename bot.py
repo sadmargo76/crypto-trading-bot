@@ -505,8 +505,8 @@ def startup_message():
 
 
 def run_bot():
-    send_telegram(startup_message())
-    print("Bot started")
+    if SEND_STARTUP_MESSAGE:
+        send_telegram(startup_message())
 
     while True:
         try:
