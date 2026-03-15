@@ -858,7 +858,7 @@ ai_score, ai_class = ai_setup_score(
     oi_pct,
     volume_ratio,
     trade["rr"]
-    )
+)
     message = format_signal_message(symbol, trend, trade, strength, funding, oi, long_short_ratio, taker_ratio)
     message += (
     f"\n\nAI Score: {ai_score}"
