@@ -349,29 +349,36 @@ def should_send_strength(strength):
     return True
 
 
-def format_signal_message(symbol, trend, trade, strength, funding, oi, long_short_ratio, taker_ratio):
-    ratio_text = "n/a" if long_short_ratio is None else f"{long_short_ratio:.2f}"
+def format_signal_message(symbol, trend, trade, strength, funding, oi, long_short_ratio, taker_ratio, oi_pct):
+    reasons = []
+
+    if oi_pct > 1.2:
+        reasons.append("растёт open interest")
+    elif oi_pct < -1.2:
+        reasons.append("сильный сдвиг open interest")
+
+    if trend == "LONG" and taker_ratio >= 0.53:
+        reasons.append("агрессивные покупки")
+    elif trend == "SHORT" and taker_ratio <= 0.47:
+        reasons.append("агрессивные продажи")
+
+    if long_short_ratio is not None:
+        if trend == "LONG" and long_short_ratio < 2.0:
+            reasons.append("толпа не перегрета в лонг")
+        elif trend == "SHORT" and long_short_ratio > 0.5:
+            reasons.append("толпа не перегрета в шорт")
+
+    reasons_text = ", ".join(reasons) if reasons else "тренд + откат + подтверждение"
 
     return (
-        f"📈 SIGNAL\n\n"
-        f"{symbol} {trend}\n"
-        f"Тип: intraday futures\n"
-        f"Сила сигнала: {strength}\n\n"
+        f"{symbol} {trend}\n\n"
+        f"Сила: {strength}\n"
         f"Вход: {trade['entry']:.2f}\n"
         f"Стоп: {trade['stop']:.2f}\n"
         f"Тейк: {trade['take']:.2f}\n"
         f"R:R = {trade['rr']:.2f}\n\n"
-        f"Фильтры:\n"
-        f"- Funding: {funding:.5f}\n"
-        f"- Open Interest: {oi:.2f}\n"
-        f"- Long/Short ratio: {ratio_text}\n"
-        f"- Taker buy ratio: {taker_ratio:.2f}\n\n"
-        f"Логика:\n"
-        f"- 1H тренд подтверждён\n"
-        f"- 15m откат в EMA-зону\n"
-        f"- 5m подтверждение входа\n"
-        f"- объём / ATR / поток проверены\n\n"
-        f"Время UTC: {trade['time']}"
+        f"Почему сигнал:\n"
+        f"{reasons_text}"
     )
 
 
