@@ -704,6 +704,25 @@ def should_send_strength(strength):
 
 def format_signal_message(symbol, trend, trade, strength, funding, oi, long_short_ratio, taker_ratio, oi_pct):
     reasons = []
+    funding_label = funding_bias_label(funding, trend)
+
+    of_score, of_label = orderflow_score(
+        trend,
+        taker_ratio,
+        oi_pct,
+        1.2
+    )
+
+    ai_score, ai_class = ai_setup_score(
+        trend,
+        strength,
+        funding,
+        long_short_ratio,
+        taker_ratio,
+        oi_pct,
+        1.2,
+        trade["rr"]
+    )
 
     if oi_pct > 1.2:
         reasons.append("растёт open interest")
@@ -731,6 +750,10 @@ def format_signal_message(symbol, trend, trade, strength, funding, oi, long_shor
     f"R:R = {trade['rr']:.2f}\n\n"
     f"Почему сигнал:\n"
     f"{reasons_text}"
+    f"\n\nAI Score: {ai_score}"
+    f"\nКласс сигнала: {ai_class}"
+    f"\nOrderflow: {of_label}"
+    f"\nFunding: {funding_label}"
 )
 
 def market_summary_for_symbol(symbol):
