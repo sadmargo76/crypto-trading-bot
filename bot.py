@@ -61,13 +61,26 @@ def get_futures_klines(symbol: str, interval: str, limit: int = 300) -> pd.DataF
     return df
 
 
-def get_open_interest(symbol: str) -> float:
-    url = "https://fapi.binance.com/fapi/v1/openInterest"
-    params = {"symbol": symbol}
-    r = requests.get(url, params=params, timeout=REQUEST_TIMEOUT)
-    r.raise_for_status()
-    data = r.json()
-    return float(data["openInterest"])
+def get_open_interest(symbol: str):
+    try:
+        url = "https://fapi.binance.com/fapi/v1/openInterest"
+        params = {"symbol": symbol}
+
+        r = requests.get(url, params=params, timeout=10)
+        r.raise_for_status()
+
+        data = r.json()
+
+        oi = float(data["openInterest"])
+
+        if oi <= 0:
+            return None
+
+        return oi
+
+    except Exception as e:
+        print(f"Open interest error {symbol}: {e}")
+        return None
 
 
 def get_funding_rate(symbol: str) -> float:
