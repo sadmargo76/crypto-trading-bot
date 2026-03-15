@@ -53,9 +53,10 @@ last_summary_date = None
 
 def send_telegram(text: str) -> None:
 def sign_params(params: dict) -> str:
-    query = "&".join([f"{k}={params[k]}" for k in params])
+    query = "&".join([f"{k}={params[k]}" 
+for k in params])
     signature = hmac.new(
-        BINANCE_SECRET_KEY.encode("utf-8"),
+BINANCE_SECRET_KEY.encode("utf-8"),
         query.encode("utf-8"),
         hashlib.sha256
     ).hexdigest()
