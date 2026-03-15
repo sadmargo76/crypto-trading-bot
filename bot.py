@@ -860,7 +860,7 @@ ai_score, ai_class = ai_setup_score(
         trade["rr"]
     )
 
-    message = format_signal_message(
+message = format_signal_message(
         symbol,
         trend,
         trade,
