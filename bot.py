@@ -337,10 +337,15 @@ def signal_strength(df_1h, df_15m, df_5m, trend, funding, long_short_ratio, take
 
 
 def should_send_strength(strength):
+    if SEND_ONLY_INSTITUTIONAL:
+        return strength == "INSTITUTIONAL"
+
     if SEND_ONLY_STRONG:
         return strength == "Сильный"
+
     if SEND_NORMAL_AND_STRONG:
-        return strength in ["Нормальный", "Сильный"]
+        return strength in ["Нормальный", "Сильный", "INSTITUTIONAL"]
+
     return True
 
 
