@@ -742,8 +742,8 @@ def format_signal_message(symbol, trend, trade, strength, funding, oi, long_shor
     )
     
     if ai_score < MIN_AI_SCORE:
-    print(symbol, "- AI filter skip", ai_score)
-    return
+        print(symbol, "- AI filter skip", ai_score)
+        return
 
     if oi_pct > 1.2:
         reasons.append("растёт open interest")
