@@ -15,6 +15,11 @@ AUTO_TRADE = True
 RISK_PER_TRADE = 0.005
 MAX_OPEN_POSITIONS = 3
 LEVERAGE = 5
+BREAKEVEN_AT_R = 1.0
+TRAIL_AFTER_R = 1.5
+PARTIAL_TP_AT_R = 2.0
+ENABLE_TRAILING = True
+MIN_AI_SCORE = 6
 
 BINANCE_FUTURES_BASE_URL = "https://demo-fapi.binance.com"
 SYMBOLS = [
@@ -732,9 +737,13 @@ def format_signal_message(symbol, trend, trade, strength, funding, oi, long_shor
         long_short_ratio,
         taker_ratio,
         oi_pct,
-        1.2,
-        1.5
+        volume_ratio,
+.       trade["rr"]
     )
+    
+    if ai_score < MIN_AI_SCORE:
+    print(symbol, "- AI filter skip", ai_score)
+    return
 
     if oi_pct > 1.2:
         reasons.append("растёт open interest")
