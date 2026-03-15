@@ -738,7 +738,7 @@ def format_signal_message(symbol, trend, trade, strength, funding, oi, long_shor
         taker_ratio,
         oi_pct,
         volume_ratio,
-.       trade["rr"]
+        trade["rr"]
     )
     
     if ai_score < MIN_AI_SCORE:
