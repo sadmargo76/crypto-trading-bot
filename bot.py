@@ -237,6 +237,76 @@ def calc_r_multiple(entry: float, stop: float, current_price: float, trend: str)
         return (entry - current_price) / risk
 
     return 0.0
+
+def build_signal(
+    strategy: str,
+    symbol: str,
+    side: str,
+    entry: float,
+    stop: float,
+    take: float,
+    rr: float,
+    strength: str,
+    score: float,
+    reason: str
+):
+    return {
+        "strategy": strategy,
+        "symbol": symbol,
+        "side": side,
+        "entry": entry,
+        "stop": stop,
+        "take": take,
+        "rr": rr,
+        "strength": strength,
+        "score": score,
+        "reason": reason
+    }
+
+
+def trend_strategy(symbol, trend, trade, strength, ai_score):
+
+    if trade is None:
+        return None
+
+    entry = trade["entry"]
+    stop = trade["stop"]
+    take = trade["take"]
+    rr = trade["rr"]
+
+    if ai_score < MIN_AI_SCORE:
+        return None
+
+    return build_signal(
+        strategy="trend",
+        symbol=symbol,
+        side=trend,
+        entry=entry,
+        stop=stop,
+        take=take,
+        rr=rr,
+        strength=strength,
+        score=ai_score,
+        reason="trend + pullback + confirmation"
+    )
+
+
+def collect_signals(symbol, trend, trade, strength, ai_score):
+
+    signals = []
+
+    trend_sig = trend_strategy(
+        symbol,
+        trend,
+        trade,
+        strength,
+        ai_score
+    )
+
+    if trend_sig:
+        signals.append(trend_sig)
+
+    return signals
     
 def execute_auto_trade(symbol: str, trend: str, trade: dict, strength: str):
     if not AUTO_TRADE:
