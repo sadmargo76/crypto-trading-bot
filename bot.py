@@ -833,12 +833,13 @@ def find_breakout_trade(df_1h, df_15m, symbol: str):
 
     volume_ratio = last15["volume"] / volume_ma
 
-    # LONG breakout
+    # LONG 
     if (
-        last15["close"] > breakout_high
-        and prev15["close"] <= breakout_high
-        and volume_ratio >= VOLUME_MULTIPLIER_MIN
-    ):
+    last15["close"] > breakout_high
+    and prev15["close"] <= breakout_high
+    and (last15["close"] - breakout_high) > atr_value * 0.2
+    and volume_ratio >= max(VOLUME_MULTIPLIER_MIN, 1.2)
+):
         entry = float(last15["close"])
         stop = float(entry - atr_value * BREAKOUT_ATR_MULTIPLIER)
         take = float(entry + (entry - stop) * MIN_RR)
@@ -859,10 +860,11 @@ def find_breakout_trade(df_1h, df_15m, symbol: str):
 
     # SHORT breakout
     if (
-        last15["close"] < breakout_low
-        and prev15["close"] >= breakout_low
-        and volume_ratio >= VOLUME_MULTIPLIER_MIN
-    ):
+    last15["close"] < breakout_low
+    and prev15["close"] >= breakout_low
+    and (breakout_low - last15["close"]) > atr_value * 0.2
+    and volume_ratio >= max(VOLUME_MULTIPLIER_MIN, 1.2)
+):
         entry = float(last15["close"])
         stop = float(entry + atr_value * BREAKOUT_ATR_MULTIPLIER)
         take = float(entry - (stop - entry) * MIN_RR)
