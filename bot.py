@@ -1038,7 +1038,7 @@ def check_symbol(symbol):
         return
 
     if 'trade' not in locals():
-    trade = build_trade(df_5m, trend)
+        trade = build_trade(df_5m, trend)
     
     if trade is None:
         print(symbol, "- failed RR")
