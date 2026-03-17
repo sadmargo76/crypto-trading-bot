@@ -38,8 +38,8 @@ CHECK_INTERVAL_SECONDS = 300
 SUMMARY_HOUR_UTC = 7
 
 SEND_ONLY_STRONG = False
-SEND_NORMAL_AND_STRONG = False
-SEND_ONLY_INSTITUTIONAL = True
+SEND_NORMAL_AND_STRONG = True
+SEND_ONLY_INSTITUTIONAL = Fasle
 SEND_STARTUP_MESSAGE = False
 SEND_MORNING_SUMMARY = False
 SEND_BREAKOUT_ALERTS = False
@@ -791,9 +791,9 @@ def signal_strength(df_1h, df_15m, df_5m, trend, funding, long_short_ratio, take
         if long_short_ratio is not None and long_short_ratio > 0.5:
             score += 1
 
-    if score <= 2:
+    if score <= 1:
         return "Слабый"
-    elif score <= 4:
+    elif score <= 3:
         return "Нормальный"
     return "Сильный"
 
