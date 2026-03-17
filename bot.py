@@ -1020,13 +1020,13 @@ def check_symbol(symbol):
             print(symbol, "- breakout sent")
 
     if not check_pullback(df_15m, trend):
-    breakout_trade = find_breakout_trade(df_1h, df_15m, symbol)
-    if breakout_trade:
-        print(symbol, "- breakout found")
-        trade = breakout_trade
+        breakout_trade = find_breakout_trade(df_15m, trend)
+        if breakout_trade:
+            print(symbol, "- breakout found")
+            trade = breakout_trade
     else:
-        print(symbol, "- no quality pullback / breakout")
-        return
+            print(symbol, "- no quality pullback")
+            return
 
     confirm_ok, taker_ratio = check_confirmation(df_5m, trend)
     if not confirm_ok:
