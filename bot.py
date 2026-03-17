@@ -812,6 +812,77 @@ def should_send_strength(strength):
     return True
 
 
+def find_breakout_trade(df_1h, df_15m, symbol: str):
+    if len(df_1h) < BREAKOUT_LOOKBACK + 5 or len(df_15m) < 30:
+        return None
+
+    last15 = df_15m.iloc[-1]
+    prev15 = df_15m.iloc[-2]
+
+    recent = df_1h.iloc[-BREAKOUT_LOOKBACK:]
+    breakout_high = recent["high"].max()
+    breakout_low = recent["low"].min()
+
+    atr_value = atr(df_1h, 14).iloc[-1]
+    if pd.isna(atr_value) or atr_value <= 0:
+        return None
+
+    volume_ma = df_15m["volume"].rolling(20).mean().iloc[-1]
+    if pd.isna(volume_ma) or volume_ma <= 0:
+        return None
+
+    volume_ratio = last15["volume"] / volume_ma
+
+    # LONG breakout
+    if (
+        last15["close"] > breakout_high
+        and prev15["close"] <= breakout_high
+        and volume_ratio >= VOLUME_MULTIPLIER_MIN
+    ):
+        entry = float(last15["close"])
+        stop = float(entry - atr_value * BREAKOUT_ATR_MULTIPLIER)
+        take = float(entry + (entry - stop) * MIN_RR)
+
+        if stop >= entry or take <= entry:
+            return None
+
+        rr = (take - entry) / (entry - stop)
+        return {
+            "trend": "LONG",
+            "entry": entry,
+            "stop": stop,
+            "take": take,
+            "rr": round(rr, 2),
+            "strategy": "BREAKOUT",
+            "volume_ratio": round(volume_ratio, 2),
+        }
+
+    # SHORT breakout
+    if (
+        last15["close"] < breakout_low
+        and prev15["close"] >= breakout_low
+        and volume_ratio >= VOLUME_MULTIPLIER_MIN
+    ):
+        entry = float(last15["close"])
+        stop = float(entry + atr_value * BREAKOUT_ATR_MULTIPLIER)
+        take = float(entry - (stop - entry) * MIN_RR)
+
+        if stop <= entry or take >= entry:
+            return None
+
+        rr = (entry - take) / (stop - entry)
+        return {
+            "trend": "SHORT",
+            "entry": entry,
+            "stop": stop,
+            "take": take,
+            "rr": round(rr, 2),
+            "strategy": "BREAKOUT",
+            "volume_ratio": round(volume_ratio, 2),
+        }
+
+    return None
+
 def format_signal_message(symbol, trend, trade, strength, funding, oi, long_short_ratio, taker_ratio, oi_pct):
     reasons = []
     funding_label = funding_bias_label(funding, trend)
@@ -857,6 +928,7 @@ def format_signal_message(symbol, trend, trade, strength, funding, oi, long_shor
     return (
     f"{symbol} {trend}\n\n"
     f"Сила: {strength}\n"
+    f"Стратегия: {trade.get('strategy', 'PULLBACK')}\n"
     f"Вероятность: {probability}%\n"
     f"Вход: {trade['entry']:.2f}\n"
     f"Стоп: {trade['stop']:.2f}\n"
@@ -946,7 +1018,12 @@ def check_symbol(symbol):
             print(symbol, "- breakout sent")
 
     if not check_pullback(df_15m, trend):
-        print(symbol, "- no quality pullback")
+    breakout_trade = find_breakout_trade(df_1h, df_15m, symbol)
+    if breakout_trade:
+        print(symbol, "- breakout found")
+        trade = breakout_trade
+    else:
+        print(symbol, "- no quality pullback / breakout")
         return
 
     confirm_ok, taker_ratio = check_confirmation(df_5m, trend)
@@ -958,7 +1035,9 @@ def check_symbol(symbol):
         print(symbol, "- impulse too extended")
         return
 
+    if 'trade' not in locals():
     trade = build_trade(df_5m, trend)
+    
     if trade is None:
         print(symbol, "- failed RR")
         return
