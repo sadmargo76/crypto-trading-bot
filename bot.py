@@ -812,7 +812,7 @@ def should_send_strength(strength):
     return True
 
 
-def breakout_trade = find_breakout_trade(df_15m, df_1h, trend, symbol)
+    def find_breakout_trade(df_15m, df_1h, trend, symbol):
     if len(df_1h) < BREAKOUT_LOOKBACK + 5 or len(df_15m) < 30:
         return None
 
@@ -1020,13 +1020,13 @@ def check_symbol(symbol):
             print(symbol, "- breakout sent")
 
     if not check_pullback(df_15m, trend):
-        breakout_trade = find_breakout_trade(df_15m, trend)
-        if breakout_trade:
-            print(symbol, "- breakout found")
-            trade = breakout_trade
+        breakout_trade = find_breakout_trade(df_15m, df_1h, trend, symbol)
+    if breakout_trade:
+        print(symbol, "- breakout found")
+        trade = breakout_trade
     else:
-            print(symbol, "- no quality pullback")
-            return
+        print(symbol, "- no quality pullback")
+        return
 
     confirm_ok, taker_ratio = check_confirmation(df_5m, trend)
     if not confirm_ok:
