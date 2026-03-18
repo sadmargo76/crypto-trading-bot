@@ -813,8 +813,8 @@ def should_send_strength(strength):
 
 
     def find_breakout_trade(df_15m, df_1h, trend, symbol):
-    if len(df_1h) < BREAKOUT_LOOKBACK + 5 or len(df_15m) < 30:
-        return None
+           if len(df_1h) < BREAKOUT_LOOKBACK + 5 or len(df_15m) < 30:
+                   return None
 
     last15 = df_15m.iloc[-1]
     prev15 = df_15m.iloc[-2]
