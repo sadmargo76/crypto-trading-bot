@@ -612,7 +612,7 @@ def detect_trend(df_1h):
         return "LONG"
     if bearish:
         return "SHORT"
-    return "NONE"
+        return "FLAT"
 
 
 def check_pullback(df_15m, trend):
