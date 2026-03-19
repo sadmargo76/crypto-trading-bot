@@ -622,6 +622,9 @@ def check_pullback(df_15m, trend):
 
     ema_zone_low = min(last["ema20"], last["ema50"])
     ema_zone_high = max(last["ema20"], last["ema50"])
+    zone_padding = last["close"] * 0.003
+ema_zone_low -= zone_padding
+ema_zone_high += zone_padding
 
     near_ema_zone = (
         ema_zone_low <= last["close"] <= ema_zone_high
