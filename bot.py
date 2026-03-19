@@ -1020,6 +1020,8 @@ def check_symbol(symbol):
             last_breakout_keys.add(breakout_key)
             print(symbol, "- breakout sent")
 
+    breakout_trade = None
+    
     if not check_pullback(df_15m, trend):
         breakout_trade = find_breakout_trade(df_15m, df_1h, trend, symbol)
     if breakout_trade:
