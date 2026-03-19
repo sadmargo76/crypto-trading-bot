@@ -610,8 +610,9 @@ def detect_trend(df_1h):
 
     if bullish:
         return "LONG"
-    if bearish:
+    elif bearish:
         return "SHORT"
+    else:
         return "FLAT"
 
 
