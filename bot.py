@@ -600,9 +600,9 @@ def add_indicators(df):
 def detect_trend(df_1h):
     last = df_1h.iloc[-1]
 
-    bullish = last["close"] > last["ema50"] and last["ema50"] > last["ema200"]
-    bearish = last["close"] < last["ema50"] and last["ema50"] < last["ema200"]
-
+    bullish = last["ema50"] > last["ema200"]
+    bearish = last["ema50"] < last["ema200"]
+    
     distance_pct = abs(last["ema50"] - last["ema200"]) / last["close"] * 100
 
     if distance_pct < FLAT_THRESHOLD_PCT:
