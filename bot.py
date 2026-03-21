@@ -639,7 +639,7 @@ if trend == "LONG":
 if trend == "SHORT":
         return near_ema_zone and last["close"] <= last["ema50"] and prev["close"] <= prev["ema50"]
 
-    return False
+return False
 
 
 def check_confirmation(df_5m, trend):
