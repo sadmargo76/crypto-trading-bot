@@ -75,6 +75,7 @@ def send_telegram(text: str) -> None:
     if not BOT_TOKEN or not CHAT_ID:
         print("BOT_TOKEN or CHAT_ID is missing")
         return
+        send_telegram("TEST MESSAGE")
 
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
     params = {"chat_id": CHAT_ID, "text": text}
