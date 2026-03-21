@@ -633,10 +633,10 @@ near_ema_zone = (
         or ema_zone_low <= last["high"] <= ema_zone_high
     )
 
-    if trend == "LONG":
+if trend == "LONG":
         return near_ema_zone and last["close"] >= last["ema50"] and prev["close"] >= prev["ema50"]
 
-    if trend == "SHORT":
+if trend == "SHORT":
         return near_ema_zone and last["close"] <= last["ema50"] and prev["close"] <= prev["ema50"]
 
     return False
