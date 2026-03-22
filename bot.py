@@ -621,6 +621,14 @@ def check_pullback(df_15m, trend):
     last = df_15m.iloc[-1]
     prev = df_15m.iloc[-2]
 
+    if trend == "LONG":
+        return last["low"] <= last["ema20"] or last["low"] <= last["ema50"]
+
+    elif trend == "SHORT":
+        return last["high"] >= last["ema20"] or last["high"] >= last["ema50"]
+
+    return False
+
 def check_entry(df, trend):
     last = df.iloc[-1]
     prev = df.iloc[-2]
