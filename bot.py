@@ -1026,8 +1026,8 @@ def check_symbol(symbol):
 
     breakout_trade = None
     
-    if not check_pullback(df_15m, trend):
-        breakout_trade = find_breakout_trade(df_15m, df_1h, trend, symbol)
+    #if not check_pullback(df_15m, trend):
+    #    breakout_trade = find_breakout_trade(df_15m, df_1h, trend, symbol)
     if breakout_trade:
         print(symbol, "- breakout found")
         trade = breakout_trade
