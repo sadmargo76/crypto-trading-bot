@@ -670,7 +670,7 @@ def check_confirmation(df_5m, trend):
         flow_ok = False
 
     confirm_ok = direction_ok and volume_ok and candle_quality_ok and flow_ok
-    return confirm_ok, taker_ratio
+    return confirm_ok
 
 
 def check_impulse_filter(df_5m):
