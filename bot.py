@@ -1044,8 +1044,7 @@ def check_symbol(symbol):
         print(symbol, "- breakout found")
         trade = breakout_trade
     else:
-        print(symbol, "- no quality pullback")
-        return
+        print(symbol, "- pullback skipped")
 
     confirm_ok, taker_ratio = check_confirmation(df_5m, trend)
     if not confirm_ok:
