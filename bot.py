@@ -1046,10 +1046,8 @@ def check_symbol(symbol):
     else:
         print(symbol, "- pullback skipped")
 
-    confirm_ok, taker_ratio = check_confirmation(df_5m, trend)
     if not confirm_ok:
-        print(symbol, "- no valid confirmation")
-        return
+        print(symbol, "- confirmation skipped")
 
     if not check_impulse_filter(df_5m):
         print(symbol, "- impulse too extended")
