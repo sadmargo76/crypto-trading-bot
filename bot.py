@@ -655,7 +655,7 @@ def check_confirmation(df_5m, trend):
     body = abs(last["close"] - last["open"])
     candle_range = max(last["high"] - last["low"], 1e-9)
     body_ratio = body / candle_range
-    candle_quality_ok = body_ratio >= 0.45
+    candle_quality_ok = body_ratio >= 0.3
 
     taker_ratio = last["taker_buy_base"] / max(last["volume"], 1e-9)
 
