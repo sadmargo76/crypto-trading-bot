@@ -621,6 +621,8 @@ def check_pullback(df_15m, trend):
     last = df_15m.iloc[-1]
     prev = df_15m.iloc[-2]
 
+def check_entry(df, trend):
+    last = df.iloc[-1]
     ema_zone_low = min(last["ema20"], last["ema50"])
     ema_zone_high = max(last["ema20"], last["ema50"])
     zone_padding = last["close"] * 0.003
