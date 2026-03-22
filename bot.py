@@ -623,25 +623,27 @@ def check_pullback(df_15m, trend):
 
 def check_entry(df, trend):
     last = df.iloc[-1]
+    prev = df.iloc[-2]
+
     ema_zone_low = min(last["ema20"], last["ema50"])
     ema_zone_high = max(last["ema20"], last["ema50"])
     zone_padding = last["close"] * 0.003
-ema_zone_low -= zone_padding
-ema_zone_high += zone_padding
+    ema_zone_low -= zone_padding
+    ema_zone_high += zone_padding
 
-near_ema_zone = (
+    near_ema_zone = (
         ema_zone_low <= last["close"] <= ema_zone_high
         or ema_zone_low <= last["low"] <= ema_zone_high
         or ema_zone_low <= last["high"] <= ema_zone_high
     )
 
-if trend == "LONG":
-        return near_ema_zone and last["close"] >= last["ema50"] and prev["close"] >= prev["ema50"]
+    if trend == "LONG":
+        return near_ema_zone and last["close"] >= last["ema50"] and last["close"] >= prev["ema50"]
 
-if trend == "SHORT":
-        return near_ema_zone and last["close"] <= last["ema50"] and prev["close"] <= prev["ema50"]
+    if trend == "SHORT":
+        return near_ema_zone and last["close"] <= last["ema50"] and last["close"] <= prev["ema50"]
 
-return False
+    return False
 
 
 def check_confirmation(df_5m, trend):
