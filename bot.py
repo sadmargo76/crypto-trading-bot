@@ -28,10 +28,6 @@ SYMBOLS = [
 "ETHUSDT",
 "SOLUSDT",
 "BNBUSDT",
-"XRPUSDT",
-"LINKUSDT",
-"AVAXUSDT",
-"DOGEUSDT"
 ]
 
 CHECK_INTERVAL_SECONDS = 300
@@ -1119,7 +1115,7 @@ def run_bot():
         except Exception as e:
             print("Main loop error:", e)
 
-        time.sleep(CHECK_INTERVAL_SECONDS)
+        time.sleep(1)
 
 
 if __name__ == "__main__":
