@@ -1036,28 +1036,14 @@ def check_symbol(symbol):
     
     #if not check_pullback(df_15m, trend):
     #    breakout_trade = find_breakout_trade(df_15m, df_1h, trend, symbol)
-    if breakout_trade:
-        print(symbol, "- breakout found")
-        trade = breakout_trade
-    else:
-        print(symbol, "- pullback skipped")
 
-    confirm_ok, taker_ratio = check_confirmation(df_5m, trend)
-    
-    if not confirm_ok:
-        print(symbol, "- confirmation skipped")
-        return
-
-    if not check_impulse_filter(df_5m):
-        print(symbol, "- impulse too extended")
-        return
-
-    if 'trade' not in locals():
-        trade = build_trade(df_5m, trend)
-    
+    trade = build_trade(df_5m, trend)
     if trade is None:
         print(symbol, "- failed RR")
         return
+
+    taker_ratio = None
+    print(symbol, "- FAST MODE entry candidate")
 
     funding = get_funding_rate(symbol)
     oi = get_open_interest(symbol)
