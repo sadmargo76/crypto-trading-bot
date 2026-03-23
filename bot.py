@@ -659,16 +659,16 @@ def check_confirmation(df_5m, trend):
     body = abs(last["close"] - last["open"])
     candle_range = max(last["high"] - last["low"], 1e-9)
     body_ratio = body / candle_range
-    candle_quality_ok = body_ratio >= 0.3
+    candle_quality_ok = body_ratio >= 0.2
 
     taker_ratio = last["taker_buy_base"] / max(last["volume"], 1e-9)
 
     if trend == "LONG":
         direction_ok = last["close"] > last["open"] and last["close"] > prev["high"]
-        flow_ok = taker_ratio >= 0.52
+        flow_ok = taker_ratio >= 0.50
     elif trend == "SHORT":
         direction_ok = last["close"] < last["open"] and last["close"] < prev["low"]
-        flow_ok = taker_ratio <= 0.48
+        flow_ok = taker_ratio <= 0.50
     else:
         direction_ok = False
         flow_ok = False
