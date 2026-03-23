@@ -1010,6 +1010,8 @@ def send_morning_summary():
 
 
 def check_symbol(symbol):
+    print("=== FAST MODE ACTIVE ===", symbol)
+    return
     df_1h = add_indicators(get_futures_klines(symbol, "1h", 300))
     df_15m = add_indicators(get_futures_klines(symbol, "15m", 300))
     df_5m = add_indicators(get_futures_klines(symbol, "5m", 300))
